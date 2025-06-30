@@ -16,7 +16,7 @@ URLS = [
     'https://www.aljazeera.com/news/',
     'https://www.npr.org/sections/world/',
 ]
-KEYWORD = 'trump'
+KEYWORDS = ['trump','iran','australia','Amarica','China','Israel']
 OUTPUT_FILE = 'fetch_titles.html'
 SEEN_FILE = 'seen_titles.txt'  # ✅ ADDED: File to persist seen titles
 
@@ -67,7 +67,7 @@ def fetch_specific_titles(seen_titles):
             for tag in headings:
                 text = tag.get_text(strip=True)
                 print(f"👉 {text}")  # Print each heading
-                if KEYWORD.lower() in text.lower() and text not in seen_titles:
+                if any(keyword.lower() in text.lower() for keyword in KEYWORDS) and text not in seen_titles:
                     link_tag = tag.find('a')
                     if link_tag and link_tag.has_attr('href'):
                         link = urljoin(url, link_tag['href'])
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         while True:
             new_items, new_titles = fetch_specific_titles(seen_titles)  # 🔧 FIXED: Always define both variables
             if new_titles:
-                print(f"✅ Found {len(new_titles)} headlines containing '{KEYWORD}':")
+                print(f"✅ Found {len(new_titles)} headlines containing keywords: {', '.join(KEYWORDS)}")
                 for t, link in new_items:
                     translation = translate_to_chinese(t)
                     print(f"- {t}\n  → {translation}\n   🔗 {link}\n")
