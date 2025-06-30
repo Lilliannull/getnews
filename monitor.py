@@ -16,7 +16,7 @@ URLS = [
     'https://www.aljazeera.com/news/',
     'https://www.npr.org/sections/world/',
 ]
-KEYWORD = 'the'
+KEYWORD = 'trump'
 OUTPUT_FILE = 'fetch_titles.html'
 SEEN_FILE = 'seen_titles.txt'  # ✅ ADDED: File to persist seen titles
 
@@ -38,19 +38,35 @@ def save_seen_titles(titles, file=SEEN_FILE):
 def fetch_specific_titles(seen_titles):
     matched = []
     new_titles = [] 
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'}
+    
 
     for url in URLS:
         try:
             response = requests.get(url,headers=headers,timeout=10)
+            print(f"📥 {url} status: {response.status_code}, size: {len(response.text)}")
+
+            # Check response code
+            if response.status_code != 200:
+                print(f"❌ {url} blocked or redirected, status: {response.status_code}")
+                continue
+
+            # Check content size
+            if len(response.text) < 500:
+                print(f"⚠️ {url} returned unusually short response, likely blocked.")
+                continue
+
             soup = BeautifulSoup(response.text, 'html.parser')
 
 
             # Search all heading tags
             headings = soup.find_all(['h1', 'h2', 'h3', 'h4'])
 
+            print(f"🔎 Checking {len(headings)} headings from {url}")
+
             for tag in headings:
                 text = tag.get_text(strip=True)
+                print(f"👉 {text}")  # Print each heading
                 if KEYWORD.lower() in text.lower() and text not in seen_titles:
                     link_tag = tag.find('a')
                     if link_tag and link_tag.has_attr('href'):
@@ -61,8 +77,11 @@ def fetch_specific_titles(seen_titles):
         except Exception as e:
             print(f"⚠️ Failed to fetch from {url}: {e}")
             continue  # ✅ FIXED: do NOT return early, just skip failed site
+    
+    # ✅ Add short delay between each request
+    time.sleep(1)
         
-     # ✅ Debug line: show how many matches after all sites checked
+    # ✅ Debug line: show how many matches after all sites checked
     print(f"🔍 Checked {len(URLS)} sites, matched {len(matched)} titles.")   
     return matched, new_titles
 
